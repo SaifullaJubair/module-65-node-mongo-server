@@ -21,11 +21,11 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 //async await
 async function run() {
    try {
-      const userCOllection = client.db('module-65-node-mongodb-curd').collection('users')
+      const userCollection = client.db('module-65-node-mongodb-curd').collection('users')
 
       app.get('/users', async (req, res) => {
          const query = {}
-         const cursor = userCOllection.find(query);
+         const cursor = userCollection.find(query);
          const users = await cursor.toArray()
          res.send(users)
       })
@@ -33,8 +33,35 @@ async function run() {
       app.post('/users', async (req, res) => {
          const user = req.body
          console.log(user);
-         const result = await userCOllection.insertOne(user);
+         const result = await userCollection.insertOne(user);
          res.send(result);
+      })
+
+
+      app.get('/users/:id', async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: ObjectId(id) }
+         const user = await userCollection.findOne(query)
+         res.send(user)
+      })
+
+      //Update
+
+      app.put('/users/:id', async (req, res) => {
+         const id = req.params.id;
+         const filter = { _id: ObjectId(id) }
+         const user = req.body;
+         const option = { upsert: true }
+         const updatedUser = {
+            $set: {
+               name: user.name,
+               address: user.address,
+               email: user.email
+            }
+         }
+         const result = await userCollection.updateOne(filter, updatedUser, option)
+         res.send(result)
+         // console.log(updateUser)
       })
 
       app.delete('/users/:id', async (req, res) => {
@@ -43,7 +70,7 @@ async function run() {
 
          const query = { _id: ObjectId(id) }
          // console.log('trying to delete data', id)
-         const result = await userCOllection.deleteOne(query)
+         const result = await userCollection.deleteOne(query)
          console.log(result);
          res.send(result)
       })
